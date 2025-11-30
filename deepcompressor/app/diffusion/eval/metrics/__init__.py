@@ -1,5 +1,6 @@
 import logging
 import os
+import glob
 
 from deepcompressor.app.diffusion.dataset.data import get_dataset
 
@@ -60,7 +61,24 @@ def compute_image_metrics(
                     )
             benchmark_results["with_gt"] = gt_results
         if ref_root and ref_metrics:
-            assert os.path.exists(ref_root), f"Reference root directory {ref_root} does not exist."
+            if not os.path.exists(ref_root):
+                # Try to find a nearby directory if the exact ref_root is missing.
+                # Prefer a directory that ends with ".RUNNING" or the only candidate that matches the prefix.
+                candidates = [p for p in glob.glob(ref_root + "*") if os.path.isdir(p)]
+                chosen = None
+                for c in candidates:
+                    if c.endswith(".RUNNING"):
+                        chosen = c
+                        break
+                if chosen is None and len(candidates) == 1:
+                    chosen = candidates[0]
+                if chosen is not None:
+                    logging.warning(
+                        f"Reference root '{ref_root}' does not exist; using fallback '{chosen}' instead."
+                    )
+                    ref_root = chosen
+                else:
+                    assert os.path.exists(ref_root), f"Reference root directory {ref_root} does not exist."
             ref_dirpath = os.path.join(ref_root, "samples", benchmark, dirname)
             ref_results = compute_image_similarity_metrics(ref_dirpath, gen_dirpath, metrics=ref_similarity_metrics)
             if "fid" in ref_other_metrics:
