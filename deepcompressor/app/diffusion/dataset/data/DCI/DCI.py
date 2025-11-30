@@ -26,9 +26,9 @@ _HOMEPAGE = "https://github.com/facebookresearch/DCI"
 
 _LICENSE = "Attribution-NonCommercial 4.0 International (https://github.com/facebookresearch/DCI/blob/main/LICENSE)"
 
-IMAGE_URL = "https://huggingface.co/datasets/mit-han-lab/svdquant-datasets/resolve/main/sDCI.gz"
+IMAGE_URL = "https://hf-mirror.com/datasets/mit-han-lab/svdquant-datasets/resolve/main/sDCI.gz"
 
-PROMPT_URLS = {"sDCI": "https://huggingface.co/datasets/mit-han-lab/svdquant-datasets/resolve/main/sDCI.yaml"}
+PROMPT_URLS = {"sDCI": "https://hf-mirror.com/datasets/mit-han-lab/svdquant-datasets/resolve/main/sDCI.yaml"}
 
 
 class DCIConfig(datasets.BuilderConfig):

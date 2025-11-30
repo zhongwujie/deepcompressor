@@ -42,7 +42,7 @@ def get_dataset(
         "name": config_name,
         "split": split,
         "trust_remote_code": True,
-        "token": True,
+        "token": False,
         "max_dataset_size": max_dataset_size,
     }
     if name.endswith((".yaml", ".yml")):

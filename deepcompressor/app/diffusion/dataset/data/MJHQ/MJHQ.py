@@ -3,6 +3,8 @@ import os
 import random
 
 import datasets
+import zipfile
+import tempfile
 from PIL import Image
 
 _CITATION = """\
@@ -71,8 +73,65 @@ class DCI(datasets.GeneratorBasedBuilder):
         )
 
     def _split_generators(self, dl_manager: datasets.download.DownloadManager):
-        meta_path = dl_manager.download(META_URL)
-        image_root = dl_manager.download_and_extract(IMAGE_URL)
+        # Prefer local Hugging Face cache if present to avoid re-downloading.
+        local_cache = os.path.expanduser("~/.cache/huggingface/hub/datasets--playgroundai--MJHQ-30K")
+        meta_path = None
+        image_root = None
+
+        if os.path.exists(local_cache):
+            # Try to locate meta_data.json anywhere under the cache directory
+            for root, dirs, files in os.walk(local_cache):
+                if "meta_data.json" in files:
+                    meta_path = os.path.join(root, "meta_data.json")
+                    break
+
+            # Try to find any .jpg file and assume its parent is a category folder
+            # so the image_root is the parent directory of that category.
+            jpg_path = None
+            for root, dirs, files in os.walk(local_cache):
+                for f in files:
+                    if f.lower().endswith(".jpg"):
+                        jpg_path = os.path.join(root, f)
+                        break
+                if jpg_path:
+                    break
+
+            if jpg_path:
+                # root currently points to the category folder (e.g., .../mjhq30k_imgs/<category>)
+                image_root = os.path.dirname(jpg_path)
+                # move up one level to reach the directory that contains category folders
+                image_root = os.path.dirname(image_root)
+
+            # If images are present as a zip file, extract to a temp dir and use that
+            if image_root is None:
+                for root, dirs, files in os.walk(local_cache):
+                    for f in files:
+                        if f.lower().endswith("mjhq30k_imgs.zip") or f.lower().endswith(".zip"):
+                            zip_file = os.path.join(root, f)
+                            try:
+                                tmpdir = tempfile.mkdtemp(prefix="mjhq30k_")
+                                with zipfile.ZipFile(zip_file, "r") as zf:
+                                    zf.extractall(tmpdir)
+                                # try to find extracted folder containing images
+                                for eroot, edirs, efiles in os.walk(tmpdir):
+                                    for ef in efiles:
+                                        if ef.lower().endswith(".jpg"):
+                                            image_root = os.path.dirname(eroot)
+                                            break
+                                    if image_root:
+                                        break
+                            except Exception:
+                                image_root = None
+                            if image_root:
+                                break
+                    if image_root:
+                        break
+
+        # Fall back to downloading if we couldn't find local files
+        if meta_path is None:
+            meta_path = dl_manager.download(META_URL)
+        if image_root is None:
+            image_root = dl_manager.download_and_extract(IMAGE_URL)
         return [
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN, gen_kwargs={"meta_path": meta_path, "image_root": image_root}
