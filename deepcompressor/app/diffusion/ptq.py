@@ -373,6 +373,7 @@ def main(config: DiffusionPtqRunConfig, logging_level: int = tools.logging.DEBUG
 
 
 if __name__ == "__main__":
+    # config is a DiffusionPtqRunConfig instance
     config, _, unused_cfgs, unused_args, unknown_args = DiffusionPtqRunConfig.get_parser().parse_known_args()
     assert isinstance(config, DiffusionPtqRunConfig)
     if len(unused_cfgs) > 0:
