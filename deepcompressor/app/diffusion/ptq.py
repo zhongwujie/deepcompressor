@@ -60,14 +60,14 @@ def ptq(  # noqa: C901
         model = DiffusionModelStruct.construct(model)
     assert isinstance(model, DiffusionModelStruct)
 
-    quant_wgts = config.enabled_wgts
-    quant_ipts = config.enabled_ipts
-    quant_opts = config.enabled_opts
-    quant_acts = quant_ipts or quant_opts
-    quant = quant_wgts or quant_acts
+    quant_wgts = config.enabled_wgts # true
+    quant_ipts = config.enabled_ipts # true
+    quant_opts = config.enabled_opts # false
+    quant_acts = quant_ipts or quant_opts # true
+    quant = quant_wgts or quant_acts # true
 
     load_model_path, load_path, save_path = "", None, None
-    if load_dirpath:
+    if load_dirpath: # false
         load_path = DiffusionQuantCacheConfig(
             smooth=os.path.join(load_dirpath, "smooth.pt"),
             branch=os.path.join(load_dirpath, "branch.pt"),
@@ -92,7 +92,7 @@ def ptq(  # noqa: C901
             load_model = False
     else:
         load_model = False
-    if save_dirpath:
+    if save_dirpath: # true
         os.makedirs(save_dirpath, exist_ok=True)
         save_path = DiffusionQuantCacheConfig(
             smooth=os.path.join(save_dirpath, "smooth.pt"),
@@ -103,7 +103,7 @@ def ptq(  # noqa: C901
     else:
         save_model = False
 
-    if quant and config.enabled_rotation:
+    if quant and config.enabled_rotation: # false
         logger.info("* Rotating model for quantization")
         tools.logging.Formatter.indent_inc()
         rotate_diffusion(model, config=config)
@@ -112,15 +112,15 @@ def ptq(  # noqa: C901
         torch.cuda.empty_cache()
 
     # region smooth quantization
-    if quant and config.enabled_smooth:
+    if quant and config.enabled_smooth: # true
         logger.info("* Smoothing model for quantization")
         tools.logging.Formatter.indent_inc()
         load_from = ""
-        if load_path and os.path.exists(load_path.smooth):
+        if load_path and os.path.exists(load_path.smooth): # false
             load_from = load_path.smooth
         elif cache and cache.path.smooth and os.path.exists(cache.path.smooth):
             load_from = cache.path.smooth
-        if load_from:
+        if load_from: # false
             logger.info(f"- Loading smooth scales from {load_from}")
             smooth_cache = torch.load(load_from)
             smooth_diffusion(model, config, smooth_cache=smooth_cache)
@@ -283,7 +283,11 @@ def main(config: DiffusionPtqRunConfig, logging_level: int = tools.logging.DEBUG
             The diffusion pipeline with quantized model.
     """
     config.output.lock()
-    config.dump(path=config.output.get_running_job_path("config.yaml"))
+    dump_path = config.output.get_running_job_path("config.yaml")
+    ## debugging
+    # print(f"==== Dumping config ====")
+    # print(dump_path)
+    config.dump(path=dump_path)
     tools.logging.setup(path=config.output.get_running_job_path("run.log"), level=logging_level)
     logger = tools.logging.getLogger(__name__)
 
@@ -315,7 +319,7 @@ def main(config: DiffusionPtqRunConfig, logging_level: int = tools.logging.DEBUG
             model,
             config.quant,
             cache=config.cache,
-            load_dirpath=config.load_from,
+            load_dirpath=config.load_from, # empty
             save_dirpath=save_dirpath,
             copy_on_save=config.copy_on_save,
             save_model=save_model,
