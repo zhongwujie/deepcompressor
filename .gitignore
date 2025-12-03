@@ -176,3 +176,4 @@ wandb/
 baselines
 *.npz
 *.png
+.VSCodeCounter

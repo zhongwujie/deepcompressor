@@ -621,13 +621,13 @@ def smooth_diffusion(
         model = DiffusionModelStruct.construct(model)
     assert isinstance(model, DiffusionModelStruct)
     smooth_cache = smooth_cache or {}
-    if config.smooth.enabled_proj:
-        if smooth_cache:
+    if config.smooth.enabled_proj: # True
+        if smooth_cache: # False
             assert smooth_cache.get("proj.fuse_when_possible", True) == config.smooth.proj.fuse_when_possible
-    if config.smooth.enabled_attn:
+    if config.smooth.enabled_attn: # False
         if smooth_cache:
             assert smooth_cache.get("attn.fuse_when_possible", True) == config.smooth.attn.fuse_when_possible
-    if not smooth_cache:
+    if not smooth_cache: # True
         with tools.logging.redirect_tqdm():
             for _, (layer, layer_cache, layer_kwargs) in tqdm(
                 config.calib.build_loader().iter_layer_activations(

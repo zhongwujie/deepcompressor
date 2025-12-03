@@ -297,7 +297,7 @@ def quantize_diffusion_weights(
     model: nn.Module | DiffusionModelStruct,
     config: DiffusionQuantConfig,
     quantizer_state_dict: dict[str, dict[str, torch.Tensor | float | None]] | None = None,
-    branch_state_dict: dict[str, dict[str, torch.Tensor]] | None = None,
+    branch_state_dict: dict[str, dict[str, torch.Tensor]] | None = None, # None
     return_with_scale_state_dict: bool = False,
 ) -> tuple[
     dict[str, dict[str, torch.Tensor | float | None]],
@@ -333,11 +333,12 @@ def quantize_diffusion_weights(
     quantizer_state_dict = quantizer_state_dict or {}
     branch_state_dict = branch_state_dict or {}
 
+    # True
     if config.wgts.enabled_low_rank and (not config.wgts.low_rank.compensate or config.wgts.low_rank.num_iters > 1):
         logger.info("* Adding low-rank branches to weights")
         tools.logging.Formatter.indent_inc()
         with tools.logging.redirect_tqdm():
-            if branch_state_dict:
+            if branch_state_dict: # False
                 for _, layer in tqdm(
                     model.get_named_layers(skip_pre_modules=True, skip_post_modules=True).items(),
                     desc="adding low-rank branches",

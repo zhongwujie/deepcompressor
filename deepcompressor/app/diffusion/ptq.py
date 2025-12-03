@@ -30,7 +30,7 @@ def ptq(  # noqa: C901
     cache: DiffusionPtqCacheConfig | None = None,
     load_dirpath: str = "",
     save_dirpath: str = "",
-    copy_on_save: bool = False,
+    copy_on_save: bool = False, # False
     save_model: bool = False,
 ) -> DiffusionModelStruct:
     """Post-training quantization of a diffusion model.
@@ -132,8 +132,8 @@ def ptq(  # noqa: C901
                 os.makedirs(cache.dirpath.smooth, exist_ok=True)
                 torch.save(smooth_cache, cache.path.smooth)
                 load_from = cache.path.smooth
-        if save_path:
-            if not copy_on_save and load_from:
+        if save_path: # true
+            if not copy_on_save and load_from: # False
                 logger.info(f"- Linking smooth scales to {save_path.smooth}")
                 os.symlink(os.path.relpath(load_from, save_dirpath), save_path.smooth)
             else:
@@ -145,7 +145,7 @@ def ptq(  # noqa: C901
         torch.cuda.empty_cache()
     # endregion
     # region collect original state dict
-    if config.needs_acts_quantizer_cache:
+    if config.needs_acts_quantizer_cache: # False
         if load_path and os.path.exists(load_path.acts):
             orig_state_dict = None
         elif cache and cache.path.acts and os.path.exists(cache.path.acts):
@@ -157,7 +157,7 @@ def ptq(  # noqa: C901
     else:
         orig_state_dict = None
     # endregion
-    if load_model:
+    if load_model: # false
         logger.info(f"* Loading model checkpoint from {load_model_path}")
         load_diffusion_weights_state_dict(
             model,
@@ -183,7 +183,7 @@ def ptq(  # noqa: C901
             branch_load_from = load_path.branch
         elif cache and cache.path.branch and os.path.exists(cache.path.branch):
             branch_load_from = cache.path.branch
-        if branch_load_from:
+        if branch_load_from: # false
             logger.info(f"- Loading branch settings from {branch_load_from}")
             branch_state_dict = torch.load(branch_load_from)
         if not quantizer_load_from:

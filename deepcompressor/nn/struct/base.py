@@ -142,5 +142,5 @@ class BaseModuleStruct(ABC):
             `Self`:
                 The module struct.
         """
-        factory = cls._factories[type(module)]
+        factory = cls._factories[type(module)] # factory function
         return factory(module, parent=parent, fname=fname, rname=rname, rkey=rkey, idx=idx, **kwargs)
